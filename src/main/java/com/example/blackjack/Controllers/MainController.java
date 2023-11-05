@@ -16,8 +16,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.shape.SVGPath;
 import javafx.scene.text.Text;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Files;
@@ -27,6 +26,10 @@ import java.util.List;
 import java.util.ResourceBundle;
 import javafx.scene.image.Image;
 import javafx.scene.web.WebView;
+
+import org.apache.batik.transcoder.TranscoderInput;
+import org.apache.batik.transcoder.TranscoderOutput;
+import org.apache.batik.transcoder.image.PNGTranscoder;
 
 
 
@@ -84,10 +87,6 @@ public class MainController implements Initializable {
 
         List<Card> givenHand = new ArrayList<> ();;
         givenHand.add(deck.dealCard());
-        givenHand.add(deck.dealCard());
-        givenHand.add(deck.dealCard());
-        givenHand.add(deck.dealCard());
-        givenHand.add(deck.dealCard());
 
         player.setHand(givenHand);
         updatePlayerHand();
@@ -102,33 +101,49 @@ public class MainController implements Initializable {
     }
 
     @FXML
-    public void updatePlayerHand() {
-        playerCardContainer.getChildren().clear(); // Clear existing ImageViews
+    public void updatePlayerHand(){
+        try {
+            playerCardContainer.getChildren().clear(); // Clear existing ImageViews
 
-        List<Card> hand = player.getHand();
+            List<Card> hand = player.getHand();
 
-        for (Card card : hand) {
-
-//            Image cardImage = card.getImage();
-//            ImageView cardImageView = new ImageView(cardImage);
-//            cardImageView.setFitWidth(100);
-//            cardImageView.setFitHeight(145);
-//            playerCardContainer.getChildren().add(cardImageView);
-
-            try {
-                WebView webView = new WebView();
+            for (Card card : hand) {
                 String svgPath = card.getImage();
-                String content = new String(Files.readAllBytes(Paths.get(svgPath)));
-
-                String htmlContent = "<html><head><style>svg { width: " + 120 + "px; height: " + 150 + "px; }</style></head><body>" + content + "</body></html>";
-                webView.getEngine().loadContent(htmlContent);
-
-                playerCardContainer.getChildren().add(webView);
-            }
-            catch (IOException e) {
-                e.printStackTrace();
+                byte[] cardByteImage = convertSvgToPng(svgPath, 100, 70);
+                Image cardImage = new Image(new ByteArrayInputStream(cardByteImage));
+                ImageView cardImageView = new ImageView(cardImage);
+                playerCardContainer.getChildren().add(cardImageView);
             }
         }
+        catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    public byte[] convertSvgToPng(String svgFilePath, int width, int height) throws Exception {
+
+            PNGTranscoder transcoder = new PNGTranscoder();
+
+            // Set the output dimensions
+            transcoder.addTranscodingHint(PNGTranscoder.KEY_WIDTH, (float) width);
+            transcoder.addTranscodingHint(PNGTranscoder.KEY_HEIGHT, (float) height);
+
+            TranscoderInput input = new TranscoderInput(new FileInputStream(svgFilePath));
+
+            // Create a ByteArrayOutputStream to capture the PNG image
+            ByteArrayOutputStream output = new ByteArrayOutputStream();
+            TranscoderOutput transcoderOutput = new TranscoderOutput(output);
+
+            // Perform the SVG to PNG conversion
+            transcoder.transcode(input, transcoderOutput);
+
+            // Convert the ByteArrayOutputStream content to a byte array
+            byte[] pngImageData = output.toByteArray();
+
+            // Close the ByteArrayOutputStream
+            output.close();
+
+            return pngImageData;
     }
 
     private void hideButtons(){

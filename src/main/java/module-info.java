@@ -3,6 +3,7 @@ module com.example.blackjack {
     requires javafx.fxml;
     requires lombok;
     requires javafx.web;
+    requires batik.transcoder;
 
 
     opens com.example.blackjack to javafx.fxml;
