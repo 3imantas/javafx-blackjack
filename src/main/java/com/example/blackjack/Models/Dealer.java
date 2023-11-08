@@ -8,6 +8,7 @@ import lombok.Setter;
 @Getter
 @Setter
 public class Dealer extends Player {
+
     public Dealer() {
         super();
     }

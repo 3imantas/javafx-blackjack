@@ -31,7 +31,7 @@ public class Deck {
                     String imageUrl = file.toURI().toURL().toExternalForm();
 
                     Image image = new Image(imageUrl);
-                    Card card = new Card(suit, value, imagePath);
+                    Card card = new Card(suit, value, imagePath, false);
                     deck.add(card);
                 } catch (MalformedURLException e) {
                     // Handle the exception, e.g., log an error or take appropriate action.
@@ -39,6 +39,8 @@ public class Deck {
                 }
             }
         }
+
+        shuffle();
     }
 
     public void shuffle(){

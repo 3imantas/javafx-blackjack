@@ -11,4 +11,5 @@ public class Card {
     private String suit;
     private String value;
     private String image;
+    private boolean isHidden;
 }
