@@ -1,9 +1,5 @@
 package com.example.blackjack.Models;
 
-import javafx.scene.image.Image;
-
-import java.io.File;
-import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -20,27 +16,20 @@ public class Deck {
 
         for (String suit : suits) {
             for (String value : values) {
-//                String imageUrl = "C:\\Users\\Eimantas\\Desktop\\Java practice\\blackjack\\assets\\" + value + "_of_" + suit + ".svg";
-//                Image image = new Image(imageUrl);
-//                Card card = new Card(suit, value, image);
-//                deck.add(card);
-
                 try {
-                    String imagePath = "C:\\Users\\Eimantas\\Desktop\\Java practice\\blackjack\\assets\\SVG-cards\\" + value + "_of_" + suit + ".svg";
-                    File file = new File(imagePath);
-                    String imageUrl = file.toURI().toURL().toExternalForm();
-
-                    Image image = new Image(imageUrl);
+                    String imagePath = generateImagePath(value, suit);
                     Card card = new Card(suit, value, imagePath, false);
                     deck.add(card);
-                } catch (MalformedURLException e) {
-                    // Handle the exception, e.g., log an error or take appropriate action.
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
         }
-
         shuffle();
+    }
+
+    private String generateImagePath(String value, String suit) {
+        return "C:\\Users\\Eimantas\\Desktop\\Java practice\\blackjack\\assets\\SVG-cards\\" + value + "_of_" + suit + ".svg";
     }
 
     public void shuffle(){

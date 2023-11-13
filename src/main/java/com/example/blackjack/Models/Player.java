@@ -2,6 +2,9 @@ package com.example.blackjack.Models;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import javafx.scene.layout.HBox;
+import javafx.scene.text.Text;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -9,23 +12,24 @@ import lombok.Setter;
 
 @Getter
 @Setter
-@RequiredArgsConstructor
-public class Player {
-    private String name;
-    @NonNull
-    private int balance;
-    private List<Card> hand;
-    private int score = 0;
+public class Player extends Participant{
+    private double balance;
+    private double bet;
+    private double won;
 
-    public Player() {
+
+    public Player(double balance) {
+        super();
+        this.balance = balance;
     }
 
-
-    public void addCard(Card dealtCard) {
-        hand.add(dealtCard);
+    @Override
+    public void reset(){
+        hand = new ArrayList<>();
+        score = 0;
+        cardContainer.getChildren().clear();
+        bet = 0;
+        won = 0;
     }
 
-    public void addScore(int cardNumericValue) {
-        this.score += cardNumericValue;
-    }
 }

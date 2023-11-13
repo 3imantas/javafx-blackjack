@@ -1,65 +1,57 @@
 package com.example.blackjack.Models;
 
-import lombok.Getter;
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-import lombok.Setter;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
-@Getter
-@Setter
+
 public class Game {
-    private int bet;
 
-    public int countCardValue(Card dealtCard) {
-        String cardValue = dealtCard.getValue();
-        int numericValue;
+    private static final Map<String, Integer> CARD_VALUES = new HashMap<>();
 
-        switch (cardValue) {
-            case "ace":
-                numericValue = 1;
-                break;
-            case "king":
-            case "queen":
-            case "jack":
-                numericValue = 10;
-                break;
-            default:
-                numericValue = Integer.parseInt(cardValue);
-                break;
-        }
-
-        return numericValue;
+    static {
+        CARD_VALUES.put("ace", 1);
+        CARD_VALUES.put("king", 10);
+        CARD_VALUES.put("queen", 10);
+        CARD_VALUES.put("jack", 10);
+        CARD_VALUES.put("10", 10);
+        CARD_VALUES.put("9", 9);
+        CARD_VALUES.put("8", 8);
+        CARD_VALUES.put("7", 7);
+        CARD_VALUES.put("6", 6);
+        CARD_VALUES.put("5", 5);
+        CARD_VALUES.put("4", 4);
+        CARD_VALUES.put("3", 3);
+        CARD_VALUES.put("2", 2);
     }
 
-    public int countHandValue(List<Card> hand) {
+    public static int countCardValue(Card dealtCard) {
+        String cardValue = dealtCard.getValue();
+        return CARD_VALUES.get(cardValue);
+    }
+
+    public static int countHandValue(List<Card> hand) {
         int handValue = 0;
         int numAces = 0;
 
         for (Card card : hand) {
-
-            if(card.isHidden()){
-                handValue+=0;
-            }
-            else {
+            if (!card.isHidden()) {
                 int cardValue = countCardValue(card);
-                if (cardValue == 1) { // If the card is an Ace
+                if (cardValue == 1) {
                     numAces++;
-                    handValue += 11; // Assume the Ace has a value of 11 by default
+                    handValue += 11;
                 } else {
                     handValue += cardValue;
                 }
             }
         }
 
-        // Check if the hand value needs to consider Aces as 1 instead of 11 to avoid busting
         while (numAces > 0 && handValue > 21) {
-            handValue -= 10; // Convert the value of one Ace from 11 to 1
+            handValue -= 10;
             numAces--;
         }
 
         return handValue;
     }
-
 }
