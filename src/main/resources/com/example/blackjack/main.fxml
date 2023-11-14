@@ -39,7 +39,7 @@
                <children>
                   <Button fx:id="splitButton" layoutX="110.0" layoutY="63.0" mnemonicParsing="false" onAction="#split" prefHeight="33.0" prefWidth="53.0" text="Split" visible="false" />
                   <Button layoutX="205.0" layoutY="63.0" mnemonicParsing="false" onAction="#stand" prefHeight="33.0" prefWidth="53.0" text="Stand" />
-                  <Button layoutX="14.0" layoutY="63.0" mnemonicParsing="false" onAction="#hit" prefHeight="33.0" prefWidth="53.0" text="Hit" />
+                  <Button layoutX="14.0" layoutY="63.0" mnemonicParsing="false" onAction="#handleHit" prefHeight="33.0" prefWidth="53.0" text="Hit" />
                   <Text fx:id="dealerScore" layoutX="125.0" layoutY="18.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Text" />
                   <Button fx:id="doubleButton" layoutX="103.0" layoutY="119.0" mnemonicParsing="false" onAction="#handleDouble" prefHeight="33.0" prefWidth="68.0" text="Double" />
                </children>

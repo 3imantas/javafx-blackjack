@@ -10,12 +10,22 @@ import lombok.Setter;
 @Setter
 public class Dealer extends Participant {
 
-    public Dealer() {
+    private static Dealer instance;
+    private Dealer() {
         super();
-        System.out.println(hand);
+    }
+
+    public static Dealer getInstance(){
+        if(instance == null){
+            instance = new Dealer();
+        }
+        return instance;
     }
     public void hideCard(){
         hand.get(0).setHidden(true);
+    }
+    public void revealCard(){
+        hand.get(0).setHidden(false);
     }
 
     @Override

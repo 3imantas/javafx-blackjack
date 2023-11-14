@@ -21,16 +21,15 @@ import org.apache.batik.transcoder.TranscoderInput;
 import org.apache.batik.transcoder.TranscoderOutput;
 import org.apache.batik.transcoder.image.PNGTranscoder;
 
+
 public class MainController implements Initializable {
 
-    private static final String HIDDEN_CARD_PATH = "C:\\Users\\Eimantas\\Desktop\\Java practice\\blackjack\\assets\\SVG-cards\\red2.svg";
+    private static final String HIDDEN_CARD_PATH = "assets/SVG-cards/red2.svg";
     public static final int SCREEN_WIDTH = 700;
     public static final int SCREEN_HEIGHT = 500;
-
     private static final int CARD_WIDTH = 100;
     private static final int CARD_HEIGHT = 140;
     public static final String TITLE = "Blackjack";
-
     private static final double PLAYER_BALANCE = 5000;
 
     @FXML
@@ -57,14 +56,26 @@ public class MainController implements Initializable {
     private Deck deck;
     private int nextPlayerIndex;
 
+    private GameState currentState;
+
+    public MainController(Deck deck, Player player, Dealer dealer){
+        this.deck = deck;
+        this.player = player;
+        this.dealer = dealer;
+    }
+    public MainController(){}
+
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         player = new Player(PLAYER_BALANCE);
         playerCardContainer.getChildren().add(player.getCardContainer());
 
-        dealer = new Dealer();
+        dealer = Dealer.getInstance();
         dealer.setCardContainer(dealerCardContainer);
+
+        deck = new Deck();
+
         mainView();
     }
 
@@ -95,8 +106,8 @@ public class MainController implements Initializable {
     }
 
     public void mainView() {
-        buttonContainer.setVisible(true);
-        controllsContainer.setVisible(false);
+        currentState = new NotPlayingState();
+        currentState.toggleButtons(buttonContainer, controllsContainer);
 
         resetGame();
         updateBetAndBalanceFields();
@@ -121,43 +132,34 @@ public class MainController implements Initializable {
             return;
         }
 
-        buttonContainer.setVisible(false);
-        controllsContainer.setVisible(true);
+        currentState = new PlayingState();
+        currentState.toggleButtons(buttonContainer, controllsContainer);
+
         doubleButton.setVisible(true);
 
+        hit(player);
+        hit(player);
 
-        dealOneCard(player);
-        dealOneCard(player);
-        displayHandAndScore(player);
-
-        dealOneCard(dealer);
-        dealOneCard(dealer);
+        hit(dealer);
+        hit(dealer);
         dealer.hideCard();
-        displayHandAndScore(dealer);
 
-//        String value = "7";
-//        String suit = "hearts";
-//        String imagePath = "C:\\Users\\Eimantas\\Desktop\\Java practice\\blackjack\\assets\\SVG-cards\\" + value + "_of_" + suit + ".svg";
-//        Card card = new Card(suit, value, imagePath, false);
-//        player.addCard(card);
-//
-//        value = "7";
-//        suit = "clubs";
-//        imagePath = "C:\\Users\\Eimantas\\Desktop\\Java practice\\blackjack\\assets\\SVG-cards\\" + value + "_of_" + suit + ".svg";
-//        card = new Card(suit, value, imagePath, false);
-//        player.addCard(card);
+        displayHandAndScore(player, dealer);
 
-        List<Card> hand = player.getHand();
-        if (hand.get(0).getValue().equals(hand.get(1).getValue())) {
+        if(cardsAreEqual()){
             splitButton.setVisible(true);
         }
-
-        checkScore();
     }
 
-    public void displayHandAndScore(Participant participant){
-        displayHand(participant);
-        displayScore(participant);
+    public boolean cardsAreEqual(){
+        List<Card> hand = player.getHand();
+        return hand.get(0).getValue().equals(hand.get(1).getValue());
+    }
+    public void displayHandAndScore(Participant... participants){
+        for (Participant participant : participants){
+            displayHand(participant);
+            displayScore(participant);
+        }
     }
 
     @FXML
@@ -199,11 +201,6 @@ public class MainController implements Initializable {
         return pngImageData;
     }
 
-    public void dealOneCard(Participant participant) {
-        Card dealtCard = deck.dealCard();
-        participant.addCard(dealtCard);
-    }
-
     private void displayScore(Participant participant) {
         List<Card> hand = participant.getHand();
         int handValue = Game.countHandValue(hand);
@@ -211,18 +208,8 @@ public class MainController implements Initializable {
         participant.getScoreText().setText(String.valueOf(handValue));
     }
 
-    public void revealDealerHand() {
-        List<Card> hand = dealer.getHand();
-        for (Card card : hand) {
-            card.setHidden(false);
-        }
-        displayHandAndScore(dealer);
-    }
-
-    public void checkScore() {
-        if (player.getScore() >= 21) {
-            stand();
-        }
+    public boolean is21orMore() {
+        return player.getScore() >= 21;
     }
 
     public void dealerTurn(int playerScore) {
@@ -236,7 +223,7 @@ public class MainController implements Initializable {
                 break;
             }
 
-            dealOneCard(dealer);
+            hit(dealer);
             displayHandAndScore(dealer);
         }
     }
@@ -255,12 +242,15 @@ public class MainController implements Initializable {
         }
     }
 
-    public void hit() {
+    public void hit(Participant participant) {
         doubleButton.setVisible(false);
 
-        dealOneCard(player);
-        displayHandAndScore(player);
-        checkScore();
+        Card dealtCard = deck.dealCard();
+        participant.addCard(dealtCard);
+
+        if (is21orMore()) {
+            stand();
+        }
     }
 
     public void stand() {
@@ -273,7 +263,7 @@ public class MainController implements Initializable {
         if (isMorePlayersAvailable()) {
             iteratePlayer();
         } else {
-            revealDealerHand();
+            dealer.revealCard();
             dealerTurn(findLowestScore());
             playerList.forEach(this::checkResult);
             countTotalWinnings();
@@ -342,7 +332,12 @@ public class MainController implements Initializable {
 
         updateBetAndBalanceFields();
 
-        hit();
+        hit(player);
         stand();
+    }
+
+    public void handleHit(ActionEvent actionEvent) {
+        hit(player);
+        displayHandAndScore(player);
     }
 }

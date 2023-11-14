@@ -29,7 +29,7 @@ public class Deck {
     }
 
     private String generateImagePath(String value, String suit) {
-        return "C:\\Users\\Eimantas\\Desktop\\Java practice\\blackjack\\assets\\SVG-cards\\" + value + "_of_" + suit + ".svg";
+        return "assets/SVG-cards/" + value + "_of_" + suit + ".svg";
     }
 
     public void shuffle(){
