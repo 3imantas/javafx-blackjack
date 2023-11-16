@@ -1,121 +1,33 @@
 package com.example.blackjack.Controllers;
-
 import com.example.blackjack.Models.*;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.fxml.Initializable;
-import javafx.scene.control.Button;
-import javafx.scene.image.ImageView;
-import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
-import javafx.scene.text.Text;
-import javafx.scene.image.Image;
-
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.FileInputStream;
-import java.net.URL;
 import java.util.*;
 
-import org.apache.batik.transcoder.TranscoderInput;
-import org.apache.batik.transcoder.TranscoderOutput;
-import org.apache.batik.transcoder.image.PNGTranscoder;
+public class MainController {
 
-
-public class MainController implements Initializable {
-
-    private static final String HIDDEN_CARD_PATH = "assets/SVG-cards/red2.svg";
-    public static final int SCREEN_WIDTH = 700;
-    public static final int SCREEN_HEIGHT = 500;
-    private static final int CARD_WIDTH = 100;
-    private static final int CARD_HEIGHT = 140;
-    public static final String TITLE = "Blackjack";
-    private static final double PLAYER_BALANCE = 5000;
-
-    @FXML
-    public Text balanceField;
-    @FXML
-    public Text betField;
-    @FXML
-    public AnchorPane buttonContainer;
-    @FXML
-    public HBox playerCardContainer;
-    @FXML
-    public HBox dealerCardContainer;
-    @FXML
-    public Text dealerScore;
-    public AnchorPane controllsContainer;
-    @FXML
-    public Button splitButton;
-    @FXML
-    public Button doubleButton;
 
     private Player player;
     private List<Player> playerList = new ArrayList<>();
     private Dealer dealer;
     private Deck deck;
     private int nextPlayerIndex;
+    private UIHandler uiHandler;
 
-    private GameState currentState;
-
-    public MainController(Deck deck, Player player, Dealer dealer){
-        this.deck = deck;
+    public MainController(Player player, Dealer dealer, List<Player> playerList, UIHandler uiHandler){
         this.player = player;
         this.dealer = dealer;
+        this.playerList = playerList;
+        deck = new Deck();
+        nextPlayerIndex = 1;
+        this.uiHandler = uiHandler;
     }
     public MainController(){}
 
 
-    @Override
-    public void initialize(URL location, ResourceBundle resources) {
-        player = new Player(PLAYER_BALANCE);
-        playerCardContainer.getChildren().add(player.getCardContainer());
-
-        dealer = Dealer.getInstance();
-        dealer.setCardContainer(dealerCardContainer);
-
-        deck = new Deck();
-
-        mainView();
-    }
-
-    @FXML
-    public void bet(ActionEvent actionEvent) {
-        if (player.getBalance() <= 0) {
-            return;
-        }
-
-        Button clickedButton = (Button) actionEvent.getSource();
-        int betAmount = Integer.parseInt(clickedButton.getText());
-
-        player.setBet(player.getBet() + betAmount);
-        player.setBalance(player.getBalance() - betAmount);
-
-        updateBetAndBalanceFields();
-    }
-
-    public void clearBet(ActionEvent actionEvent) {
-        player.setBalance(player.getBalance() + player.getBet());
-        player.setBet(0);
-        updateBetAndBalanceFields();
-    }
-
-    private void updateBetAndBalanceFields() {
-        betField.setText("Bet: " + player.getBet());
-        balanceField.setText("Balance: " + player.getBalance());
-    }
-
-    public void mainView() {
-        currentState = new NotPlayingState();
-        currentState.toggleButtons(buttonContainer, controllsContainer);
-
-        resetGame();
-        updateBetAndBalanceFields();
-
-        deck = new Deck();
-    }
 
     public void resetGame(){
+        deck = new Deck();
         dealer.reset();
 
         for (Player player : playerList){
@@ -125,106 +37,47 @@ public class MainController implements Initializable {
         playerList.clear();
         playerList.add(player);
         nextPlayerIndex = 1;
+
+        uiHandler.resetUI();
     }
 
-    public void startGame(ActionEvent actionEvent) {
+    public void startGame() {
         if (player.getBet() == 0) {
             return;
         }
 
-        currentState = new PlayingState();
-        currentState.toggleButtons(buttonContainer, controllsContainer);
-
-        doubleButton.setVisible(true);
+        System.out.println(player.getHand());
 
         hit(player);
         hit(player);
 
-        hit(dealer);
         hit(dealer);
         dealer.hideCard();
-
-        displayHandAndScore(player, dealer);
-
-        if(cardsAreEqual()){
-            splitButton.setVisible(true);
-        }
+        hit(dealer);
     }
 
     public boolean cardsAreEqual(){
         List<Card> hand = player.getHand();
         return hand.get(0).getValue().equals(hand.get(1).getValue());
     }
-    public void displayHandAndScore(Participant... participants){
-        for (Participant participant : participants){
-            displayHand(participant);
-            displayScore(participant);
-        }
-    }
 
     @FXML
-    public void displayHand(Participant participant) {
-        try {
-            participant.getCardContainer().getChildren().clear();
-            participant.setScoreText(new Text());
-            participant.getCardContainer().getChildren().add(participant.getScoreText());
 
-            List<Card> hand = participant.getHand();
-
-            for (Card card : hand) {
-                String svgPath = card.isHidden() ? HIDDEN_CARD_PATH : card.getImage();
-                byte[] cardByteImage = convertSvgToPng(svgPath, CARD_WIDTH, CARD_HEIGHT);
-                Image cardImage = new Image(new ByteArrayInputStream(cardByteImage));
-                ImageView cardImageView = new ImageView(cardImage);
-
-                participant.getCardContainer().getChildren().add(cardImageView);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    public byte[] convertSvgToPng(String svgFilePath, int width, int height) throws Exception {
-        PNGTranscoder transcoder = new PNGTranscoder();
-        transcoder.addTranscodingHint(PNGTranscoder.KEY_WIDTH, (float) width);
-        transcoder.addTranscodingHint(PNGTranscoder.KEY_HEIGHT, (float) height);
-
-        TranscoderInput input = new TranscoderInput(new FileInputStream(svgFilePath));
-        ByteArrayOutputStream output = new ByteArrayOutputStream();
-        TranscoderOutput transcoderOutput = new TranscoderOutput(output);
-
-        transcoder.transcode(input, transcoderOutput);
-
-        byte[] pngImageData = output.toByteArray();
-        output.close();
-
-        return pngImageData;
-    }
-
-    private void displayScore(Participant participant) {
-        List<Card> hand = participant.getHand();
-        int handValue = Game.countHandValue(hand);
-        participant.setScore(handValue);
-        participant.getScoreText().setText(String.valueOf(handValue));
-    }
 
     public boolean is21orMore() {
         return player.getScore() >= 21;
     }
 
     public void dealerTurn(int playerScore) {
-
-        if (playerScore > 21) {
+        if (playerScore > 21 || dealer.getScore() >= 21) {
             return;
         }
 
-        while (dealer.getScore() <= playerScore) {
+        while (dealer.getScore() <= playerScore || dealer.getScore() < 21) {
             if (dealer.getScore() == playerScore && dealer.getScore() >= 15) {
                 break;
             }
-
             hit(dealer);
-            displayHandAndScore(dealer);
         }
     }
 
@@ -243,10 +96,11 @@ public class MainController implements Initializable {
     }
 
     public void hit(Participant participant) {
-        doubleButton.setVisible(false);
-
         Card dealtCard = deck.dealCard();
         participant.addCard(dealtCard);
+
+        countHandScore(participant);
+        UIController.displayHandAndScore(participant);
 
         if (is21orMore()) {
             stand();
@@ -258,8 +112,6 @@ public class MainController implements Initializable {
             return;
         }
 
-        doubleButton.setVisible(false);
-
         if (isMorePlayersAvailable()) {
             iteratePlayer();
         } else {
@@ -269,7 +121,7 @@ public class MainController implements Initializable {
             countTotalWinnings();
 
             Result.getResult(player);
-            mainView();
+            resetGame();
         }
     }
 
@@ -296,6 +148,12 @@ public class MainController implements Initializable {
         return lowestScore;
     }
 
+    public void countHandScore(Participant participant){
+        List<Card> hand = participant.getHand();
+        int handValue = Game.countHandValue(hand);
+        participant.setScore(handValue);
+    }
+
     public void countTotalWinnings(){
         double initialBet = playerList.stream().mapToDouble(Player::getBet).sum();
         double amountWon = playerList.stream().mapToDouble(Player::getWon).sum();
@@ -305,10 +163,7 @@ public class MainController implements Initializable {
         player.setWon(amountWon);
     }
 
-    public void split(ActionEvent actionEvent) {
-        splitButton.setVisible(false);
-        doubleButton.setVisible(false);
-
+    public void split(HBox playerCardContainer) {
         Card leftCard = player.getHand().get(0);
         Card rightCard = player.getHand().get(1);
         double splitBet = player.getBet() / 2.0;
@@ -321,23 +176,13 @@ public class MainController implements Initializable {
 
         player.setHand(new ArrayList<>(Arrays.asList(leftCard)));
         player.setBet(splitBet);
-
-        playerList.forEach(this::displayHandAndScore);
     }
 
-    public void handleDouble() {
+    public void doubleDown() {
         double initialBet = player.getBet();
-        player.setBet(initialBet * 2);
-        player.setBalance(player.getBalance() - initialBet);
-
-        updateBetAndBalanceFields();
+        player.bet(initialBet);
 
         hit(player);
         stand();
-    }
-
-    public void handleHit(ActionEvent actionEvent) {
-        hit(player);
-        displayHandAndScore(player);
     }
 }

@@ -39,6 +39,7 @@ public class Deck {
     public Card dealCard() {
         Random random = new Random();
 
+
         int index = random.nextInt(deck.size());
         Card card = deck.remove(index);
 

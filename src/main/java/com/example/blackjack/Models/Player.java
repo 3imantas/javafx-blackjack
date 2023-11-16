@@ -19,17 +19,31 @@ public class Player extends Participant{
 
 
     public Player(double balance) {
-        super();
         this.balance = balance;
     }
 
     @Override
     public void reset(){
         hand = new ArrayList<>();
-        score = 0;
         cardContainer.getChildren().clear();
+        score = 0;
         bet = 0;
         won = 0;
+    }
+
+    public void bet(double betAmount){
+        if(balance < betAmount){
+            return;
+        }
+
+        bet += betAmount;
+        balance -= betAmount;
+    }
+
+
+    public void clearBet(){
+        balance += bet;
+        bet = 0;
     }
 
 }
