@@ -25,11 +25,8 @@ import org.apache.batik.transcoder.image.PNGTranscoder;
 public class MainController implements Initializable {
 
     private static final String HIDDEN_CARD_PATH = "assets/SVG-cards/red2.svg";
-    public static final int SCREEN_WIDTH = 700;
-    public static final int SCREEN_HEIGHT = 500;
     private static final int CARD_WIDTH = 100;
     private static final int CARD_HEIGHT = 140;
-    public static final String TITLE = "Blackjack";
     private static final double PLAYER_BALANCE = 5000;
 
     @FXML
@@ -135,16 +132,30 @@ public class MainController implements Initializable {
         currentState = new PlayingState();
         currentState.toggleButtons(buttonContainer, controllsContainer);
 
-        doubleButton.setVisible(true);
 
-        hit(player);
-        hit(player);
-
-        hit(dealer);
         hit(dealer);
         dealer.hideCard();
+        hit(dealer);
 
-        displayHandAndScore(player, dealer);
+
+        String suit = "hearts";
+        String value = "3";
+        String img = "assets/SVG-cards/" + value + "_of_" + suit + ".svg";
+        Card card = new Card(suit, value, img, false);
+        player.addCard(card);
+
+        suit = "clubs";
+        value = "3";
+        img = "assets/SVG-cards/" + value + "_of_" + suit + ".svg";
+        card = new Card(suit, value, img, false);
+        player.addCard(card);
+
+        displayHandAndScore(player);
+
+        //hit(player);
+        //hit(player);
+
+        doubleButton.setVisible(true);
 
         if(cardsAreEqual()){
             splitButton.setVisible(true);
@@ -173,7 +184,7 @@ public class MainController implements Initializable {
 
             for (Card card : hand) {
                 String svgPath = card.isHidden() ? HIDDEN_CARD_PATH : card.getImage();
-                byte[] cardByteImage = convertSvgToPng(svgPath, CARD_WIDTH, CARD_HEIGHT);
+                byte[] cardByteImage = convertSvgToPng(svgPath);
                 Image cardImage = new Image(new ByteArrayInputStream(cardByteImage));
                 ImageView cardImageView = new ImageView(cardImage);
 
@@ -184,10 +195,10 @@ public class MainController implements Initializable {
         }
     }
 
-    public byte[] convertSvgToPng(String svgFilePath, int width, int height) throws Exception {
+    public byte[] convertSvgToPng(String svgFilePath) throws Exception {
         PNGTranscoder transcoder = new PNGTranscoder();
-        transcoder.addTranscodingHint(PNGTranscoder.KEY_WIDTH, (float) width);
-        transcoder.addTranscodingHint(PNGTranscoder.KEY_HEIGHT, (float) height);
+        transcoder.addTranscodingHint(PNGTranscoder.KEY_WIDTH, (float) CARD_WIDTH);
+        transcoder.addTranscodingHint(PNGTranscoder.KEY_HEIGHT, (float) CARD_HEIGHT);
 
         TranscoderInput input = new TranscoderInput(new FileInputStream(svgFilePath));
         ByteArrayOutputStream output = new ByteArrayOutputStream();
@@ -243,12 +254,14 @@ public class MainController implements Initializable {
     }
 
     public void hit(Participant participant) {
-        doubleButton.setVisible(false);
+        hideButtons();
 
         Card dealtCard = deck.dealCard();
         participant.addCard(dealtCard);
 
-        if (is21orMore()) {
+        displayHandAndScore(participant);
+
+        if (is21orMore() && participant instanceof Player) {
             stand();
         }
     }
@@ -258,7 +271,7 @@ public class MainController implements Initializable {
             return;
         }
 
-        doubleButton.setVisible(false);
+        hideButtons();
 
         if (isMorePlayersAvailable()) {
             iteratePlayer();
@@ -306,8 +319,7 @@ public class MainController implements Initializable {
     }
 
     public void split(ActionEvent actionEvent) {
-        splitButton.setVisible(false);
-        doubleButton.setVisible(false);
+        hideButtons();
 
         Card leftCard = player.getHand().get(0);
         Card rightCard = player.getHand().get(1);
@@ -326,6 +338,8 @@ public class MainController implements Initializable {
     }
 
     public void handleDouble() {
+        hideButtons();
+
         double initialBet = player.getBet();
         player.setBet(initialBet * 2);
         player.setBalance(player.getBalance() - initialBet);
@@ -338,6 +352,10 @@ public class MainController implements Initializable {
 
     public void handleHit(ActionEvent actionEvent) {
         hit(player);
-        displayHandAndScore(player);
+    }
+
+    public void hideButtons(){
+        splitButton.setVisible(false);
+        doubleButton.setVisible(false);
     }
 }
