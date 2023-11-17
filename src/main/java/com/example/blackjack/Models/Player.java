@@ -19,6 +19,7 @@ public class Player extends Participant{
 
 
     public Player(double balance) {
+        super();
         this.balance = balance;
     }
 
@@ -44,6 +45,14 @@ public class Player extends Participant{
     public void clearBet(){
         balance += bet;
         bet = 0;
+    }
+
+    public boolean cardsAreEqual(){
+
+        if(hand.isEmpty()){
+            return false;
+        }
+        return hand.get(0).getValue().equals(hand.get(1).getValue());
     }
 
 }

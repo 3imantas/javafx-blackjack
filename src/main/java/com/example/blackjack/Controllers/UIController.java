@@ -56,7 +56,9 @@ public class UIController implements Initializable, UIHandler {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        resetUI();
+        currentState = new NotPlayingState();
+        currentState.toggleButtons(buttonContainer, controllsContainer);
+
         player = new Player(PLAYER_BALANCE);
         playerCardContainer.getChildren().add(player.getCardContainer());
         playerList.add(player);
@@ -70,11 +72,11 @@ public class UIController implements Initializable, UIHandler {
 
     @Override
     public void resetUI(){
-        playerCardContainer.getChildren().clear();
-        dealerCardContainer.getChildren().clear();
-
         currentState = new NotPlayingState();
         currentState.toggleButtons(buttonContainer, controllsContainer);
+
+        balanceField.setText(String.valueOf(player.getBalance()));
+        betField.setText(String.valueOf(player.getBet()));
     }
 
     @FXML
@@ -98,13 +100,18 @@ public class UIController implements Initializable, UIHandler {
 
     @FXML
     public void handlePlay(){
+
+        if (player.getBet() == 0) {
+            return;
+        }
+
         currentState = new PlayingState();
         currentState.toggleButtons(buttonContainer, controllsContainer);
 
         doubleButton.setVisible(true);
         game.startGame();
 
-        if(game.cardsAreEqual()){
+        if(player.cardsAreEqual()){
             splitButton.setVisible(true);
         }
 
@@ -165,7 +172,10 @@ public class UIController implements Initializable, UIHandler {
         doubleButton.setVisible(false);
         game.hit(player);
 
-        //displayHandAndScore(player, dealer);
+        for (Player player : playerList){
+            System.out.println(player.getCardContainer());
+            displayHandAndScore(player);
+        }
     }
 
     public void handleStand() {

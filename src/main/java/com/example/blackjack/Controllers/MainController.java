@@ -34,35 +34,35 @@ public class MainController {
             player.reset();
         }
 
-        playerList.clear();
-        playerList.add(player);
+        playerList.subList(1, playerList.size()).clear();
+        player = playerList.get(0);
         nextPlayerIndex = 1;
 
         uiHandler.resetUI();
     }
 
     public void startGame() {
-        if (player.getBet() == 0) {
-            return;
-        }
-
-        System.out.println(player.getHand());
-
-        hit(player);
-        hit(player);
-
         hit(dealer);
         dealer.hideCard();
         hit(dealer);
+
+        String suit = "hearts";
+        String value = "3";
+        String img = "assets/SVG-cards/" + value + "_of_" + suit + ".svg";
+        Card card = new Card(suit, value, img, false);
+        player.addCard(card);
+
+        suit = "clubs";
+        value = "3";
+        img = "assets/SVG-cards/" + value + "_of_" + suit + ".svg";
+        card = new Card(suit, value, img, false);
+        player.addCard(card);
+
+        countHandScore(player);
+
+        //hit(player);
+        //hit(player);
     }
-
-    public boolean cardsAreEqual(){
-        List<Card> hand = player.getHand();
-        return hand.get(0).getValue().equals(hand.get(1).getValue());
-    }
-
-    @FXML
-
 
     public boolean is21orMore() {
         return player.getScore() >= 21;
@@ -100,9 +100,8 @@ public class MainController {
         participant.addCard(dealtCard);
 
         countHandScore(participant);
-        UIController.displayHandAndScore(participant);
 
-        if (is21orMore()) {
+        if (is21orMore() && !(participant instanceof Dealer)) {
             stand();
         }
     }
@@ -115,11 +114,13 @@ public class MainController {
         if (isMorePlayersAvailable()) {
             iteratePlayer();
         } else {
+
             dealer.revealCard();
             dealerTurn(findLowestScore());
             playerList.forEach(this::checkResult);
             countTotalWinnings();
 
+            UIController.displayHandAndScore(player, dealer);
             Result.getResult(player);
             resetGame();
         }
@@ -173,6 +174,8 @@ public class MainController {
         player2.setBet(splitBet);
         playerCardContainer.getChildren().add(player2.getCardContainer());
         playerList.add(player2);
+
+        System.out.println(player2.getCardContainer());
 
         player.setHand(new ArrayList<>(Arrays.asList(leftCard)));
         player.setBet(splitBet);
