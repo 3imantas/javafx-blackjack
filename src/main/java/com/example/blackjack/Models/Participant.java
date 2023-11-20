@@ -11,19 +11,16 @@ import lombok.*;
 @Setter
 public abstract class Participant {
 
-    protected List<Card> hand;
-    protected int score;
-    protected HBox cardContainer;
-    protected Text scoreText;
+    List<Hand> hands;
+    int currentHandIndex = 0;
 
     public Participant(){
-        hand = new ArrayList<>();
-        cardContainer = new HBox();
-        scoreText = new Text();
+        hands = new ArrayList<>();
+        hands.add(new Hand());
     }
 
-    public void addCard(Card dealtCard) {
-        hand.add(dealtCard);
+    public Hand getHand(){
+        return hands.get(currentHandIndex);
     }
 
     abstract public void reset();

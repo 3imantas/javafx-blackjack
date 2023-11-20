@@ -11,12 +11,12 @@
    <children>
       <AnchorPane prefHeight="500.0" prefWidth="700.0">
          <children>
-            <Text fx:id="balanceField" layoutX="14.0" layoutY="41.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Balance:" wrappingWidth="202.5947265625">
+            <Text fx:id="balanceField" layoutX="14.0" layoutY="41.0" strokeType="OUTSIDE" strokeWidth="0.0" wrappingWidth="202.5947265625">
                <font>
                   <Font size="25.0" />
                </font>
             </Text>
-            <Text fx:id="betField" layoutX="23.0" layoutY="402.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Bet: 0" wrappingWidth="91.4296875">
+            <Text fx:id="betField" layoutX="23.0" layoutY="402.0" strokeType="OUTSIDE" strokeWidth="0.0" wrappingWidth="91.4296875">
                <font>
                   <Font size="16.0" />
                </font>
@@ -40,7 +40,6 @@
                   <Button fx:id="splitButton" layoutX="110.0" layoutY="63.0" mnemonicParsing="false" onAction="#handleSplit" prefHeight="33.0" prefWidth="53.0" text="Split" visible="false" />
                   <Button layoutX="205.0" layoutY="63.0" mnemonicParsing="false" onAction="#handleStand" prefHeight="33.0" prefWidth="53.0" text="Stand" />
                   <Button layoutX="14.0" layoutY="63.0" mnemonicParsing="false" onAction="#handleHit" prefHeight="33.0" prefWidth="53.0" text="Hit" />
-                  <Text fx:id="dealerScore" layoutX="125.0" layoutY="18.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Text" />
                   <Button fx:id="doubleButton" layoutX="103.0" layoutY="119.0" mnemonicParsing="false" onAction="#handleDouble" prefHeight="33.0" prefWidth="68.0" text="Double" />
                </children>
             </AnchorPane>

@@ -10,30 +10,20 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.text.Text;
-import org.apache.batik.transcoder.TranscoderInput;
-import org.apache.batik.transcoder.TranscoderOutput;
-import org.apache.batik.transcoder.image.PNGTranscoder;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.FileInputStream;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.ResourceBundle;
 
 public class UIController implements Initializable, UIHandler {
-
     private static final String HIDDEN_CARD_PATH = "assets/SVG-cards/red2.svg";
     private static final int CARD_WIDTH = 100;
     private static final int CARD_HEIGHT = 140;
-    private static final double PLAYER_BALANCE = 5000;
     private Player player;
-    private List<Player> playerList = new ArrayList<>();
     private Dealer dealer;
     private GameState currentState;
-    private MainController game;
+    private GameLogic game;
 
     @FXML
     public Text balanceField;
@@ -45,29 +35,26 @@ public class UIController implements Initializable, UIHandler {
     public HBox playerCardContainer;
     @FXML
     public HBox dealerCardContainer;
-    @FXML
-    public Text dealerScore;
     public AnchorPane controllsContainer;
     @FXML
     public Button splitButton;
     @FXML
     public Button doubleButton;
 
-
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         currentState = new NotPlayingState();
         currentState.toggleButtons(buttonContainer, controllsContainer);
 
-        player = new Player(PLAYER_BALANCE);
-        playerCardContainer.getChildren().add(player.getCardContainer());
-        playerList.add(player);
+        player = new Player();
+        playerCardContainer.getChildren().add(player.getHand().getHandContainer());
 
         dealer = Dealer.getInstance();
-        dealer.setCardContainer(dealerCardContainer);
+        dealerCardContainer.getChildren().add(dealer.getHand().getHandContainer());
 
-        game = new MainController(player, dealer, playerList, this);
+        game = new GameLogic(player, this);
 
+        updateBetAndBalanceFields();
     }
 
     @Override
@@ -75,8 +62,10 @@ public class UIController implements Initializable, UIHandler {
         currentState = new NotPlayingState();
         currentState.toggleButtons(buttonContainer, controllsContainer);
 
-        balanceField.setText(String.valueOf(player.getBalance()));
-        betField.setText(String.valueOf(player.getBet()));
+        updateBetAndBalanceFields();
+
+        doubleButton.setVisible(true);
+        splitButton.setVisible(false);
     }
 
     @FXML
@@ -93,11 +82,6 @@ public class UIController implements Initializable, UIHandler {
         updateBetAndBalanceFields();
     }
 
-    private void updateBetAndBalanceFields() {
-        betField.setText("Bet: " + player.getBet());
-        balanceField.setText("Balance: " + player.getBalance());
-    }
-
     @FXML
     public void handlePlay(){
 
@@ -111,14 +95,36 @@ public class UIController implements Initializable, UIHandler {
         doubleButton.setVisible(true);
         game.startGame();
 
+
         if(player.cardsAreEqual()){
             splitButton.setVisible(true);
         }
-
-        displayHandAndScore(player, dealer);
     }
 
-    public static void displayHandAndScore(Participant... participants){
+
+    public void handleHit() {
+        hideSplitAndDouble();
+        game.hit(player);
+    }
+
+    public void handleStand() {
+        hideSplitAndDouble();
+        game.stand();
+    }
+
+    public void handleSplit(ActionEvent actionEvent) {
+        hideSplitAndDouble();
+        game.split(playerCardContainer);
+    }
+
+    public void handleDouble() {
+        hideSplitAndDouble();
+        game.doubleDown();
+        updateBetAndBalanceFields();
+    }
+
+    @Override
+    public void displayHandAndScore(Participant... participants){
         for (Participant participant : participants){
             displayHand(participant);
             displayScore(participant);
@@ -127,79 +133,42 @@ public class UIController implements Initializable, UIHandler {
 
     public static void displayHand(Participant participant) {
         try {
-            participant.getCardContainer().getChildren().clear();
-            participant.setScoreText(new Text());
-            participant.getCardContainer().getChildren().add(participant.getScoreText());
+            List<Hand> totalHands = participant.getHands();
+            for (Hand hand : totalHands) {
 
-            List<Card> hand = participant.getHand();
+                HBox cardContainer = hand.getCardContainer();
+                cardContainer.getChildren().clear();
 
-            for (Card card : hand) {
-                String svgPath = card.isHidden() ? HIDDEN_CARD_PATH : card.getImage();
-                byte[] cardByteImage = convertSvgToPng(svgPath);
-                Image cardImage = new Image(new ByteArrayInputStream(cardByteImage));
-                ImageView cardImageView = new ImageView(cardImage);
+                List<Card> cards = hand.getCards();
 
-                participant.getCardContainer().getChildren().add(cardImageView);
+                for (Card card : cards) {
+                    String svgPath = card.isHidden() ? HIDDEN_CARD_PATH : card.getImage();
+                    byte[] cardByteImage = ImageConverter.convertSvgToPng(svgPath, CARD_WIDTH, CARD_HEIGHT);
+                    Image cardImage = new Image(new ByteArrayInputStream(cardByteImage));
+                    ImageView cardImageView = new ImageView(cardImage);
+
+                    cardContainer.getChildren().add(cardImageView);
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
-
-    public static byte[] convertSvgToPng(String svgFilePath) throws Exception {
-        PNGTranscoder transcoder = new PNGTranscoder();
-        transcoder.addTranscodingHint(PNGTranscoder.KEY_WIDTH, (float) CARD_WIDTH);
-        transcoder.addTranscodingHint(PNGTranscoder.KEY_HEIGHT, (float) CARD_HEIGHT);
-
-        TranscoderInput input = new TranscoderInput(new FileInputStream(svgFilePath));
-        ByteArrayOutputStream output = new ByteArrayOutputStream();
-        TranscoderOutput transcoderOutput = new TranscoderOutput(output);
-
-        transcoder.transcode(input, transcoderOutput);
-
-        byte[] pngImageData = output.toByteArray();
-        output.close();
-
-        return pngImageData;
-    }
-
     private static void displayScore(Participant participant) {
-        int handValue = participant.getScore();
-        participant.getScoreText().setText(String.valueOf(handValue));
-    }
-
-    public void handleHit() {
-        doubleButton.setVisible(false);
-        game.hit(player);
-
-        for (Player player : playerList){
-            System.out.println(player.getCardContainer());
-            displayHandAndScore(player);
+        List<Hand> totalHands = participant.getHands();
+        for (Hand hand : totalHands) {
+            int handValue = hand.getScore();
+            Text scoreText = hand.getScoreText();
+            scoreText.setText(String.valueOf(handValue));
         }
     }
-
-    public void handleStand() {
-        game.stand();
-        doubleButton.setVisible(false);
-
-        displayHandAndScore(player, dealer);
+    private void updateBetAndBalanceFields() {
+        betField.setText("Bet: " + player.getBet());
+        balanceField.setText("Balance: " + player.getBalance());
     }
-
-    public void handleSplit(ActionEvent actionEvent) {
+    private void hideSplitAndDouble(){
         splitButton.setVisible(false);
         doubleButton.setVisible(false);
-
-        game.split(playerCardContainer);
-
-        for (Player player : playerList){
-            displayHandAndScore(player);
-        }
-    }
-
-    public void handleDouble() {
-        game.doubleDown();
-        updateBetAndBalanceFields();
-        displayHandAndScore(player, dealer);
     }
 
 }

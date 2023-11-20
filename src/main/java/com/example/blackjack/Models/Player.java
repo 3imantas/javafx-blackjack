@@ -13,23 +13,25 @@ import lombok.Setter;
 @Getter
 @Setter
 public class Player extends Participant{
+
+    private static final double INITIAL_BALANCE = 5000;
+    private final static double PREVIOUS_HAND_OPACITY = 0.5;
+    private boolean hasStood = false;
     private double balance;
     private double bet;
     private double won;
 
-
-    public Player(double balance) {
+    public Player() {
         super();
-        this.balance = balance;
+        this.balance = INITIAL_BALANCE;
     }
 
-    @Override
-    public void reset(){
-        hand = new ArrayList<>();
-        cardContainer.getChildren().clear();
-        score = 0;
-        bet = 0;
-        won = 0;
+    public boolean getHasStood(){
+        return hasStood;
+    }
+
+    public void setHasStood(boolean condition){
+        hasStood = condition;
     }
 
     public void bet(double betAmount){
@@ -49,10 +51,47 @@ public class Player extends Participant{
 
     public boolean cardsAreEqual(){
 
-        if(hand.isEmpty()){
+        if (this.getHand().getCards().isEmpty()) {
             return false;
         }
-        return hand.get(0).getValue().equals(hand.get(1).getValue());
+
+        String cardValue1 = this.getHand().getCards().get(0).getValue();
+        String cardValue2 = this.getHand().getCards().get(1).getValue();
+
+        return cardValue1.equals(cardValue2);
+    }
+
+    public boolean isMoreHandsAvailable(){
+        return hands.size() > currentHandIndex + 1;
+    }
+
+    public void iterateHand(){
+        getHand().getHandContainer().setOpacity(PREVIOUS_HAND_OPACITY);
+        currentHandIndex++;
+    }
+
+    public int findLowestScore(){
+        int lowestScore = hands.stream()
+                .mapToInt(Hand::getScore)
+                .min()
+                .orElse(Integer.MAX_VALUE);
+        return lowestScore;
+    }
+
+    @Override
+    public void reset(){
+        currentHandIndex = 0;
+        for(Hand hand : hands){
+            hand.getHandContainer().setOpacity(1);
+            hand.getCardContainer().getChildren().clear();
+            hand.getScoreText().setText("");
+            hand.getCards().clear();
+            hand.setScore(0);
+        }
+        hands.subList(1, hands.size()).clear();
+        bet = 0;
+        won = 0;
+        hasStood = false;
     }
 
 }
