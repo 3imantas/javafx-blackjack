@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 
-public class Game {
+public class ValueCounter {
 
     private static final Map<String, Integer> CARD_VALUES = new HashMap<>();
 
@@ -26,12 +26,12 @@ public class Game {
         CARD_VALUES.put("2", 2);
     }
 
-    public static int countCardValue(Card dealtCard) {
+    private static int countCardValue(Card dealtCard) {
         String cardValue = dealtCard.getValue();
         return CARD_VALUES.get(cardValue);
     }
 
-    public static int countHandValue(List<Card> hand) {
+    private static int countHandValue(List<Card> hand) {
         int handValue = 0;
         int numAces = 0;
 
@@ -53,5 +53,15 @@ public class Game {
         }
 
         return handValue;
+    }
+
+    public static void countHandsValues(Participant participant){
+        List<Hand> totalHands = participant.getHands();
+
+        for(Hand hand : totalHands) {
+            List<Card> cards = hand.getCards();
+            int handValue = countHandValue(cards);
+            hand.setScore(handValue);
+        }
     }
 }

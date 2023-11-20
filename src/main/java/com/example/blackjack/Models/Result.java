@@ -2,42 +2,24 @@ package com.example.blackjack.Models;
 
 import javafx.scene.control.Alert;
 public class Result {
-
-    public static void dealerWon(Player player)
+    public static void resultAlert(String title, String text, double won)
     {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("Dealer won!");
+        alert.setTitle(title);
         alert.setHeaderText("");
-        alert.setContentText("You lost: " + (player.getBet() - player.getWon()));
+        alert.setContentText(text + won);
         alert.showAndWait();
     }
 
-    public static void playerWon(Player player)
-    {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("Player won!");
-        alert.setHeaderText("");
-        alert.setContentText("You Won: " + player.getWon());
-        alert.showAndWait();
-    }
-
-    public static void draw(Player player)
-    {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("Draw!");
-        alert.setHeaderText("");
-        alert.setContentText("You got back: " + player.getWon());
-        alert.showAndWait();
-    }
-
-    public static void getResult(Player player) {
+    public static void showResult(Player player) {
+        double won = player.getWon();
         if(player.getWon() == player.getBet()){
-            draw(player);
+            resultAlert("Draw!", "You got back: ", won);
         } else if (player.getWon() > player.getBet()) {
-            playerWon(player);
-        }
-        else{
-            dealerWon(player);
+            resultAlert("Player won!", "You Won: ", won);
+        } else{
+            won = player.getBet();
+            resultAlert("Dealer won!", "You lost: ", won);
         }
 
         player.setBalance(player.getBalance() + player.getWon());
